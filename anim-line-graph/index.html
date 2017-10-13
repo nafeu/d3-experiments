@@ -134,13 +134,19 @@
 
     }
 
-    var interval = setInterval(function(){
-      update(generateData(n));
-    }, 1000);
+    var interval;
 
     document.addEventListener('keypress', function(event) {
       if (event.which == 114) update(generateData(n)); // r
-      if (event.which == 116) clearInterval(interval); // t
+      if (event.which == 115) { // s
+        update(generateData(n));
+        interval = setInterval(function(){
+          update(generateData(n));
+        }, 1000);
+      }
+      if (event.which == 116) { // t
+        if (interval) clearInterval(interval);
+      }
     });
 
   </script>
