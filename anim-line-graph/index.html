@@ -35,7 +35,7 @@
         height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
 
     // Number of data points
-    var n = 30;
+    var n = 10;
 
     var xScale = d3.scaleLinear()
         .domain([0, n-1]) // input
@@ -56,14 +56,39 @@
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    svg.append("g")
-        .attr("class", "x-axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(xScale));
+    // svg.append("g")
+    //     .attr("class", "x-axis")
+    //     .attr("transform", "translate(0," + height + ")")
+    //     .call(d3.axisBottom(xScale));
 
     svg.append("g")
         .attr("class", "y-axis")
-        .call(d3.axisLeft(yScale));
+        .call(d3.axisLeft(yScale).tickFormat(d3.format(".0%")));
+
+    // gridlines in x axis function
+    function make_x_gridlines() {
+        return d3.axisBottom(xScale)
+            .ticks(10);
+    }
+
+    // gridlines in y axis function
+    function make_y_gridlines() {
+        return d3.axisLeft(yScale)
+            .ticks(10);
+    }
+
+    svg.append("g")
+        .attr("class", "grid")
+        .attr("transform", "translate(0," + height + ")")
+        .call(make_x_gridlines()
+            .tickSize(-height)
+            .tickFormat(""));
+
+    svg.append("g")
+        .attr("class", "grid")
+        .call(make_y_gridlines()
+            .tickSize(-width)
+            .tickFormat(""));
 
     var startingData = generateData(n);
 
