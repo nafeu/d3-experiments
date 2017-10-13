@@ -16,14 +16,22 @@
       .x-axis text, .x-axis path, .x-axis line, .y-axis text, .y-axis path, .y-axis line {
         stroke: #FFFFFF;
       }
+      .grid line {
+        stroke: #FFFFFF;
+        stroke-opacity: 0.2;
+      }
+      .grid path {
+        stroke-width: 0;
+      }
       .line {
-          fill: none;
-          stroke: #FFFFFF;
-          stroke-width: 3;
+        fill: none;
+        stroke: #FFFFFF;
+        stroke-width: 3;
       }
       .dot {
-          fill: #FFFFFF;
-          stroke: #7B1FA2;
+        fill: #FFFFFF;
+        stroke: #7B1FA2;
+        stroke-width: 3;
       }
     </style>
   </head>
@@ -34,11 +42,14 @@
         width = window.innerWidth - margin.left - margin.right,
         height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
 
-    // Number of data points
-    var n = 10;
+    var numDataPoints = 25;
+    var dataset = d3.range(numDataPoints)
+      .map(function(d) {
+        return {"y": "0.0"};
+      });
 
     var xScale = d3.scaleLinear()
-        .domain([0, n-1]) // input
+        .domain([0, numDataPoints-1]) // input
         .range([0, width]); // output
 
     var yScale = d3.scaleLinear()
@@ -47,8 +58,8 @@
 
     var line = d3.line()
         .x(function(d, i) { return xScale(i); })
-        .y(function(d) { return yScale(d.y); })
-        .curve(d3.curveMonotoneX);
+        .y(function(d) { return yScale(d.y); });
+        // .curve(d3.curveMonotoneX);
 
     var svg = d3.select("body").append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -90,15 +101,13 @@
             .tickSize(-width)
             .tickFormat(""));
 
-    var startingData = generateData(n);
-
     svg.append("path")
-        .datum(startingData)
+        .datum(dataset)
         .attr("class", "line")
         .attr("d", line);
 
     svg.selectAll(".dot")
-        .data(startingData)
+        .data(dataset)
       .enter().append("circle")
         .attr("class", "dot")
         .attr("cx", function(d, i) {
@@ -109,22 +118,27 @@
         })
         .attr("r", 5);
 
-    function generateData(range) {
-      return d3.range(range)
-        .map(function(d) {
-          return {"y": d3.randomUniform(1)()};
-        });
+    function generateData() {
+      dataset.shift();
+      datapoint = {y: dataset[dataset.length - 1].y};
+      if (Math.random() >= 0.5 && parseFloat(datapoint.y) <= 0.9) {
+        datapoint.y = (parseFloat(datapoint.y) + 0.1).toString();
+      } else if (parseFloat(datapoint.y) >= 0.1) {
+        datapoint.y = (parseFloat(datapoint.y) - 0.1).toString();
+      }
+      dataset.push(datapoint);
+      return dataset;
     }
 
     function update(data) {
 
       svg.select(".line")
-        .transition()
+        // .transition()
         .attr("d", line(data));
 
       svg.selectAll('circle')
         .data(data)
-        .transition()
+        // .transition()
         .attr("cx", function(d, i) {
           return xScale(i);
         })
@@ -137,11 +151,11 @@
     var interval;
 
     document.addEventListener('keypress', function(event) {
-      if (event.which == 114) update(generateData(n)); // r
+      if (event.which == 114) update(generateData()); // r
       if (event.which == 115) { // s
-        update(generateData(n));
+        update(generateData());
         interval = setInterval(function(){
-          update(generateData(n));
+          update(generateData());
         }, 1000);
       }
       if (event.which == 116) { // t
