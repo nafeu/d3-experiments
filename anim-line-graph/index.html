@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="Basic reusable chart in D3.js">
+    <meta name="keywords" content="D3js,JS,JavaScript,Graphs,Charts">
+    <meta name="author" content="Nafeu Nasir">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Basic Reusable Chart | D3 Experiments</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <style type="text/css">
+      body {
+        background-color: #7B1FA2;
+      }
+      .x-axis text, .x-axis path, .x-axis line, .y-axis text, .y-axis path, .y-axis line {
+        stroke: #FFFFFF;
+      }
+      .line {
+          fill: none;
+          stroke: #FFFFFF;
+          stroke-width: 3;
+      }
+      .dot {
+          fill: #FFFFFF;
+          stroke: #7B1FA2;
+      }
+    </style>
+  </head>
+  <body>
+  </body>
+  <script type="text/javascript">
+    var margin = {top: 100, right: 100, bottom: 100, left: 100},
+        width = window.innerWidth - margin.left - margin.right,
+        height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
+
+    // Number of data points
+    var n = 30;
+
+    var xScale = d3.scaleLinear()
+        .domain([0, n-1]) // input
+        .range([0, width]); // output
+
+    var yScale = d3.scaleLinear()
+        .domain([0, 1]) // input
+        .range([height, 0]); // output
+
+    var line = d3.line()
+        .x(function(d, i) { return xScale(i); })
+        .y(function(d) { return yScale(d.y); })
+        .curve(d3.curveMonotoneX);
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale));
+
+    svg.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale));
+
+    var startingData = generateData(n);
+
+    svg.append("path")
+        .datum(startingData)
+        .attr("class", "line")
+        .attr("d", line);
+
+    svg.selectAll(".dot")
+        .data(startingData)
+      .enter().append("circle")
+        .attr("class", "dot")
+        .attr("cx", function(d, i) {
+          return xScale(i);
+        })
+        .attr("cy", function(d) {
+          return yScale(d.y);
+        })
+        .attr("r", 5);
+
+    function generateData(range) {
+      return d3.range(range)
+        .map(function(d) {
+          return {"y": d3.randomUniform(1)()};
+        });
+    }
+
+    function update(data) {
+
+      svg.select(".line")
+        .transition()
+        .attr("d", line(data));
+
+      svg.selectAll('circle')
+        .data(data)
+        .transition()
+        .attr("cx", function(d, i) {
+          return xScale(i);
+        })
+        .attr("cy", function(d) {
+          return yScale(d.y);
+        });
+
+    }
+
+    var interval = setInterval(function(){
+      update(generateData(n));
+    }, 1000);
+
+    document.addEventListener('keypress', function(event) {
+      if (event.which == 114) update(generateData(n)); // r
+      if (event.which == 116) clearInterval(interval); // t
+    });
+
+  </script>
+</html>
