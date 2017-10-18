@@ -29,12 +29,12 @@
       .line {
         fill: none;
         stroke: #FFFFFF;
-        stroke-width: 3;
+        stroke-width: 1;
       }
       .dot {
         fill: #FFFFFF;
         stroke: #7B1FA2;
-        stroke-width: 3;
+        stroke-width: 4;
       }
       #info {
         position: absolute;
@@ -51,23 +51,34 @@
     <div id="info">Simple Animating Line Graph (press R)</div>
   </body>
   <script type="text/javascript">
+    // Configurations
+    var UPDATE_INTERVAL_MS = 1000,
+        NUM_DATA_POINTS = 30,
+        Y_DELTA = 0.05,
+        Y_STARTING_VAL = "0.0",
+        Y_TOP_LIMIT = 1,
+        Y_BOTTOM_LIMIT = 0,
+        SHOW_DOTS = false,
+        SHOW_X_AXIS = false,
+        RANDOM_LOW_DIVIDER = 0.2,
+        RANDOM_HIGH_DIVIDER = 0.8;
+
     var margin = {top: 100, right: 100, bottom: 100, left: 100},
         width = window.innerWidth - margin.left - margin.right,
-        height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
+        height = window.innerHeight - margin.top - margin.bottom;
 
-    var numDataPoints = 25;
-    var dataset = d3.range(numDataPoints)
+    var dataset = d3.range(NUM_DATA_POINTS)
       .map(function(d) {
         return {"y": "0.0"};
       });
 
     var xScale = d3.scaleLinear()
-        .domain([0, numDataPoints-1]) // input
-        .range([0, width]); // output
+        .domain([0, NUM_DATA_POINTS - 1])
+        .range([0, width]);
 
     var yScale = d3.scaleLinear()
-        .domain([0, 1]) // input
-        .range([height, 0]); // output
+        .domain([0, 1])
+        .range([height, 0]);
 
     var line = d3.line()
         .x(function(d, i) { return xScale(i); })
@@ -80,22 +91,22 @@
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // svg.append("g")
-    //     .attr("class", "x-axis")
-    //     .attr("transform", "translate(0," + height + ")")
-    //     .call(d3.axisBottom(xScale));
+    if (SHOW_X_AXIS) {
+      svg.append("g")
+          .attr("class", "x-axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(xScale));
+    }
 
     svg.append("g")
         .attr("class", "y-axis")
         .call(d3.axisLeft(yScale).tickFormat(d3.format(".0%")));
 
-    // gridlines in x axis function
     function make_x_gridlines() {
         return d3.axisBottom(xScale)
             .ticks(10);
     }
 
-    // gridlines in y axis function
     function make_y_gridlines() {
         return d3.axisLeft(yScale)
             .ticks(10);
@@ -119,6 +130,7 @@
         .attr("class", "line")
         .attr("d", line);
 
+    if (SHOW_DOTS) {
     svg.selectAll(".dot")
         .data(dataset)
       .enter().append("circle")
@@ -130,14 +142,17 @@
           return yScale(d.y);
         })
         .attr("r", 5);
+    }
+
 
     function generateData() {
       dataset.shift();
       datapoint = {y: dataset[dataset.length - 1].y};
-      if (Math.random() >= 0.5 && parseFloat(datapoint.y) <= 0.9) {
-        datapoint.y = (parseFloat(datapoint.y) + 0.1).toString();
-      } else if (parseFloat(datapoint.y) >= 0.1) {
-        datapoint.y = (parseFloat(datapoint.y) - 0.1).toString();
+      if ((parseFloat(datapoint.y) + Y_DELTA) <= Y_TOP_LIMIT && Math.random() >= RANDOM_HIGH_DIVIDER) {
+        datapoint.y = (parseFloat(datapoint.y) + Y_DELTA).toString();
+      }
+      else if ((parseFloat(datapoint.y) - Y_DELTA) >= Y_BOTTOM_LIMIT && Math.random() < RANDOM_LOW_DIVIDER) {
+        datapoint.y = (parseFloat(datapoint.y) - Y_DELTA).toString();
       }
       dataset.push(datapoint);
       return dataset;
@@ -163,18 +178,31 @@
 
     var interval;
 
-    document.addEventListener('keypress', function(event) {
-      if (event.which == 114) update(generateData()); // r
-      if (event.which == 115) { // s
+    function startAnimInterval() {
+      if (!interval) {
         update(generateData());
         interval = setInterval(function(){
           update(generateData());
-        }, 1000);
+        }, UPDATE_INTERVAL_MS);
+      }
+    }
+
+    function stopAnimInterval() {
+      if (interval) clearInterval(interval);
+      interval = null;
+    }
+
+    document.addEventListener('keypress', function(event) {
+      if (event.which == 114) update(generateData()); // r
+      if (event.which == 115) { // s
+        startAnimInterval();
       }
       if (event.which == 116) { // t
-        if (interval) clearInterval(interval);
+        stopAnimInterval();
       }
     });
+
+    startAnimInterval();
 
   </script>
 </html>
